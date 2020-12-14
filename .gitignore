@@ -1,0 +1,10 @@
+SearchingSorting_Project_3.vcxproj
+
+#Ignore debug folder
+Debug
+
+#Ignore VS files
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+

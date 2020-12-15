@@ -125,6 +125,7 @@ public:
 
     Error_code insert(const List_entry& x) {
         //insert at next availabe position
+        cout << "insert List.h" << endl;
         int position = count;
         if (count > MAXSIZE) return overflow;
         if (position < 0) return underflow;

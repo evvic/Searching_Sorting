@@ -131,16 +131,23 @@ preferences select_preferences();
 //even Keys (0, 2, ... 2n) should always fail
 //while odd keys (1, 3, ... 2n + 1) should be successful (unless too high or low)
 
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 int main() {
     
     preferences user = select_preferences();
 
     //0 == sequential search
     if (user.searchMethods[0]) {
+        cout << "sequentail if{}" << endl;
         List<Record> testme;
+        cout << "sequential before populate" << endl;
         populate_list(testme, user.listSize);
-        if (user.chooseKey) { test_seq_search(user.numsearches, testme, user.key); }
-        else { test_seq_search(user.numsearches, testme, -1); }
+        //if (user.chooseKey) { test_seq_search(user.numsearches, testme, user.key); }
+        //else { test_seq_search(user.numsearches, testme, -1); }
         //function for seq search
     }
     //1 == binary search
@@ -307,7 +314,6 @@ Error_code sequential_search(const List<Record>& the_list, const Key& target, in
     return not_present;
 }
 
-
 Error_code Ordered_list::insert(const Record& data)
 /*
 Post: If the Ordered_list is not full, the function succeeds:
@@ -317,21 +323,16 @@ Post: If the Ordered_list is not full, the function succeeds:
       Else: the function fails with the diagnostic Error_code overflow.
 */
 {
-    cout << "Ordered_list::insert(Record) size = " << size() << " data = " << data;
     int s = size();
     int position;
-    /* teacer's code
     for (position = 0; position < s; position++) {
         Record list_data;
         retrieve(position, list_data);
-        cout << " list_data = " << list_data << endl;
-        if (data >= list_data) break;
+        if (list_data >= data) break;
     }
-    */
-
-    //cout << "position before return p = " << position << endl;
-    return List<Record>::insert(size(), data);
+    return List<Record>::insert(position, data);
 }
+
 Error_code Ordered_list::insert(int position, const Record& data)
 /*
 Post: If the Ordered_list is not full, 0 <= position <= n,
@@ -492,21 +493,22 @@ Error_code binary_search_2(const Ordered_list& the_list, const Key& target, int&
 */
 
 
-
+//sequential
 void populate_list(List<Record>& the_list, int size) {
     //always populate with odd integers
     for (int i = 1; i < size * 2; i += 2) {
-        Record temp;
+        Record temp = i;
         cout << "in populate_list() " << i << endl;
         if (the_list.insert(temp) == overflow) {
             cout << "ERROR: List is full, populating has ended." << endl;
             continue;
         }
-        the_list.traverse(0, the_list.size());
+        
     }
+    the_list.traverse(0, the_list.size());
 }
 
-
+//binary
 void populate_list(Ordered_list& the_list, int size) {
     //always populate with odd integers
     for (int i = 1; i < size * 2; i += 2) {

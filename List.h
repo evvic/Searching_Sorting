@@ -96,14 +96,15 @@ public:
     }
 
     Error_code insert(const List_entry& x) {
-        //insert at next availabe position
-        cout << "insert List.h" << endl;
+        //inserting at tail position
         int position = count;
         if (count > MAXSIZE) return overflow;
         if (position < 0) return underflow;
         if (position > count) return overflow;
 
         Node<List_entry>* new_node = new Node<List_entry>;
+
+
 
         if (position == 0) {
             if (count == 0) {
@@ -115,10 +116,13 @@ public:
             head = new_node;
         }
         else {
+            //if inserting at tail of list
             set_position(position - 1);
+            current->next = new_node;
             new_node->back = current;
-            new_node->next = current->next;
+            new_node->next = NULL;
         }
+     
 
         new_node->entry = x;
 

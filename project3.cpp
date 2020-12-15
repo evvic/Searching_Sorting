@@ -5,19 +5,16 @@
 #include <iostream>
 #include <conio.h>
 #include <iomanip>
+#include <queue>
 
 /*
 * folder location:
 * cd desktop/Programming 3/SearchingSorting_Project_3/SearchingSorting_Project_3/Searching_Sorting
 * 
-    There is a large bug using the Record class.
-    Although it builds, the List member funcitons don't work with the Record datatype.
-    Most likely have to use the typedef int Record while in the List class
-    But may still have to use the record class when overload casting to Key
-
-    Maybe change class member function?
-
-    error line 318
+* NEXT STEP
+* insertion sort()
+* sort a table of about 1,000 items (table?)
+* displays the first 200 values before sorting and after to make sure at least a slice of it worked
 */
 
 using namespace std;
@@ -110,21 +107,18 @@ bool operator !=(const Key& x, const Key& y);
 
 void test_seq_search(int searches, List<Record>& the_list, int userkey);
 void test_bin_search(int searches, Ordered_list& the_list, int userkey);
+void performance_comparison(int searches, List<Record>& seq_list, Ordered_list& bin_list);
 Error_code sequential_search(const List<Record>& the_list, const Key& target, int& position);
 
 Error_code recursive_binary_1(const Ordered_list& the_list, const Key& target, int bottom, int top, int& position);
 Error_code run_recursive_binary_1(const Ordered_list& the_list, const Key& target, int& position);
-/*
-Error_code binary_search_1(const Ordered_list& the_list, const Key& target, int& position);
-
-Error_code recursive_binary_2(const Ordered_list& the_list, const Key& target, int bottom, int top, int& position);
-Error_code run_recursive_binary_2(const Ordered_list& the_list, const Key& target, int& position);
-Error_code binary_search_2(const Ordered_list& the_list, const Key& target, int& position);
-*/
 
 void print_out(string s, double t, int comparissons, int searches);
 void populate_list(List<Record>& the_list, int size); //always populate with odd
 void populate_list(Ordered_list& the_list, int size); //op with odd
+void randomly_populate_list(List<Record>& the_list, int size); //[0 - 10,000] range of random values
+void randomly_populate_table(int* table, int size); //[0 - 10,000] range of random values into int array
+void table_slice(int* table, int size);
 preferences select_preferences();
 
 //even Keys (0, 2, ... 2n) should always fail
@@ -132,21 +126,21 @@ preferences select_preferences();
 
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ MAIN BELOW ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 int main() {
     
     preferences user = select_preferences();
-
+    /*
     //0 == sequential search
     if (user.searchMethods[0]) {
         cout << "sequentail if{}" << endl;
         List<Record> testme;
         cout << "sequential before populate" << endl;
         populate_list(testme, user.listSize);
-        //if (user.chooseKey) { test_seq_search(user.numsearches, testme, user.key); }
-        //else { test_seq_search(user.numsearches, testme, -1); }
+        if (user.chooseKey) { test_seq_search(user.numsearches, testme, user.key); }
+        else { test_seq_search(user.numsearches, testme, -1); }
         //function for seq search
     }
     //1 == binary search
@@ -155,14 +149,86 @@ int main() {
         cout << "about to populate" << endl;
         populate_list(testme2, user.listSize);
         cout << "finished populating list" << endl;
-        //if (user.chooseKey) { test_bin_search(user.numsearches, testme2, user.key); }
-        //else { test_bin_search(user.numsearches, testme2, -1); }
+        if (user.chooseKey) { test_bin_search(user.numsearches, testme2, user.key); }
+        else { test_bin_search(user.numsearches, testme2, -1); }
         //function for binary search
     }
+    */
+
+    //Performance comparison info
+    List<Record> testme;
+    populate_list(testme, user.listSize);
+    Ordered_list testme2; //
+    populate_list(testme2, user.listSize);
+
+    //Sorting
+    int table[1000]; //default should be 1000
+
+
+    randomly_populate_table(table, user.listSize);
+
+    
+
+
+    //performance_comparison(user.numsearches, testme, testme2);
 
     
     
     //test_search(user.numsearches, testme2);
+}
+
+void performance_comparison(const int searches, List<Record>& seq_list, Ordered_list& bin_list) {
+    /*
+    * both searches should be run 10 times, with same size & order of list
+    * the randomly generated key should be the same for both, changes each search 
+    */
+    cout << "\tPerformance Comparison" << endl;
+    if (seq_list.size() != bin_list.size()) {
+        cout << "ERROR. Comparison should have equal sized lists" << endl;
+        return;
+    }
+    if (searches < 10) {
+        cout << "ERROR. The number of searches must be positive & greater than 10 for performance comparison." << endl;
+        return;
+    }
+
+    int list_size = seq_list.size();
+    string status = "Successful"; //maybe not good practice
+    queue<int> targets; //maybe use queue, collect the 10 used target keys for seq and use same ones in order for bin
+    int found_at, target;
+    Key::comparisons = 0;
+    Random number;
+    Timer clock;
+    double seq_time, bin_time;
+
+    cout << endl << "Error: Failed to find expected target(s) ";
+    for (int i = 0; i < searches; i++) {
+        //generating random key (odd or even):
+        target = number.random_integer(0, list_size * 2) + 1; // [1 - 2 * list_size]
+        targets.push(target); //save keys for bin search (same order)
+        if (sequential_search(seq_list, target, found_at) == not_present) {
+            cout <<  target << ' ';
+            status = "Unsuccessful";
+        }
+    }
+    
+    seq_time = clock.elapsed_time();
+    cout << endl << "Sequential Search results." << endl;
+    print_out(status, seq_time, Key::comparisons, searches);
+    clock.reset();
+    status = "Successful";
+
+    cout << endl << "Error: Failed to find expected target(s) ";
+    for (int i = 0; i < searches; i++) {
+        if (run_recursive_binary_1(bin_list, (const Key)targets.front(), found_at) == not_present)
+             cout << targets.front() << ' ';
+        targets.pop();
+    }
+    bin_time = clock.elapsed_time();
+    cout << endl << "Binary Search results." << endl;
+    print_out("Successful", bin_time, Key::comparisons, searches);
+
+    //can use bin_time and seq_time to compare
 }
 
 
@@ -244,7 +310,7 @@ Uses: Methods of the classes List, Random, and Timer,
         if (userkey > -1) { target = userkey; }
         //generating random odd key:
         else { target = 2 * number.random_integer(0, list_size - 1) + 1; }
-        cout << "calling recursive_binary" << endl;
+        //cout << "calling recursive_binary" << endl;
         if (run_recursive_binary_1(the_list, (const Key)target, found_at) == not_present)
             cout << "Error: Failed to find expected target " << target << endl;
     }
@@ -306,6 +372,7 @@ Error_code sequential_search(const List<Record>& the_list, const Key& target, in
         //cout << position << ' ';                ///////
         Record data;
         the_list.retrieve(position, data);
+        //cout << " comparrisons: " << Key::comparisons;
         if (data == target) return success;
     }
     //cout << endl;               ////////
@@ -371,25 +438,25 @@ Post: If a Record in the range of locations
 Uses: recursive_binary_1 and methods of the classes List and Record.
 */
 {
-    cout << "recursive_binary_1()" << endl;
+    //cout << "recursive_binary_1()" << endl;
     Record data;
     if (bottom < top) {              // List has more than one entry.
         int mid = (bottom + top) / 2;
         the_list.retrieve(mid, data);
-        cout << "data: " << data << "\tmid: " << mid << endl;
+        //cout << "data: " << data << "\tmid: " << mid << endl;
         if (data < target)  // Reduce to top half of list.
             return recursive_binary_1(the_list, target, mid + 1, top, position);
         else                          // Reduce to bottom half of list.
             return recursive_binary_1(the_list, target, bottom, mid, position);
     }
     else if (top < bottom) {
-        cout << "recursive_binary_1() : not present" << endl;
+        //cout << "recursive_binary_1() : not present" << endl;
         return not_present;           // List is empty.
     }
 
       
     else {                           // List has exactly one entry.
-        cout << "recursive_binary_1 else " << endl;
+        //cout << "recursive_binary_1 else " << endl;
         position = bottom;
         the_list.retrieve(bottom, data);
         if (target == data) return success;
@@ -403,101 +470,13 @@ Error_code run_recursive_binary_1(const Ordered_list& the_list, const Key& targe
     return recursive_binary_1(the_list, target, 0, the_list.size() - 1, position);
 }
 
-/*
-Error_code binary_search_1(const Ordered_list& the_list, const Key& target, int& position)
-    /*
-    Post: If a Record in the_list  has Key equal to target, then position locates
-          one such entry and a code of success is returned.
-          Otherwise, not_present is returned and position is undefined.
-    Uses: Methods for classes List and Record.
-    
-{
-    Record data;
-    int bottom = 0, top = the_list.size() - 1;
-
-    while (bottom < top) {
-        int mid = (bottom + top) / 2;
-        the_list.retrieve(mid, data);
-        if (data < target)
-            bottom = mid + 1;
-        else
-            top = mid;
-    }
-    if (top < bottom) return not_present;
-    else {
-        position = bottom;
-        the_list.retrieve(bottom, data);
-        if (data == target) return success;
-        else return not_present;
-    }
-}
-
-
-Error_code recursive_binary_2(const Ordered_list& the_list, const Key& target, int bottom, int top, int& position)
-    /*
-    Pre:  The indices bottom to top define the
-          range in the list to search for the target.
-    Post: If a Record in the range from bottom to top in the_list
-          has key equal to target, then position locates
-          one such entry, and a code of success is returned.
-          Otherwise, not_present is returned, and position is undefined.
-    Uses: recursive_binary_2, together with methods from the classes
-          Ordered_list and Record.
-    
-{
-    Record data;
-    if (bottom <= top) {
-        int mid = (bottom + top) / 2;
-        the_list.retrieve(mid, data);
-        if (data == target) {
-            position = mid;
-            return success;
-        }
-
-        else if (data < target)
-            return recursive_binary_2(the_list, target, mid + 1, top, position);
-        else
-            return recursive_binary_2(the_list, target, bottom, mid - 1, position);
-    }
-    else return not_present;
-}
-
-
-Error_code run_recursive_binary_2(const Ordered_list& the_list, const Key& target, int& position)
-{
-    return recursive_binary_2(the_list, target, 0, the_list.size() - 1, position);
-}
-
-
-Error_code binary_search_2(const Ordered_list& the_list, const Key& target, int& position)
-    /*
-    Post: If a Record in the_list has key equal to target, then position locates
-          one such entry and a code of success is returned.
-          Otherwise, not_present is returned and position is undefined.
-    Uses: Methods for classes Ordered_list and Record.
-    
-{
-    Record data;
-    int bottom = 0, top = the_list.size() - 1;
-    while (bottom <= top) {
-        position = (bottom + top) / 2;
-        the_list.retrieve(position, data);
-        if (data == target) return success;
-        if (data < target) bottom = position + 1;
-        else top = position - 1;
-    }
-    return not_present;
-}
-
-*/
-
 
 //sequential
 void populate_list(List<Record>& the_list, int size) {
     //always populate with odd integers
     for (int i = 1; i < size * 2; i += 2) {
         Record temp = i;
-        cout << "in populate_list() " << i << endl;
+        //cout << "in populate_list() " << i << endl;
         if (the_list.insert(temp) == overflow) {
             cout << "ERROR: List is full, populating has ended." << endl;
             continue;
@@ -512,7 +491,7 @@ void populate_list(Ordered_list& the_list, int size) {
     //always populate with odd integers
     for (int i = 1; i < size * 2; i += 2) {
         Record temp = i;
-        cout << "in (ordered) populate_list() " << i << endl;
+        //cout << "in (ordered) populate_list() " << i << endl;
         if (the_list.insert(temp) == overflow) {
             cout << "ERROR: List is full, populating has ended." << endl;
             continue;
@@ -522,6 +501,15 @@ void populate_list(Ordered_list& the_list, int size) {
     cout << "traversing to check..." << endl;
     the_list.traverse(0, the_list.size());
 }
+
+//[0 - 10,000] range of random values into int array
+void randomly_populate_table(int* table, int size) {
+    Random guy;
+    for (int i = 0; i < size; i++) {
+        table[i] = guy.random_integer(0, 10000);
+    }
+}
+
 
 
 

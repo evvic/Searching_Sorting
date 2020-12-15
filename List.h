@@ -78,12 +78,12 @@ public:
             return success;
         }
         else {
-            cout << "Retrieve else: ";
+            //cout << "Retrieve else: ";
             Node<List_entry>* temp = new Node<List_entry>;
             temp = head;
 
             for (int i = 0; i < pos; i++) {
-                cout << " temp->entry: " << temp->entry;
+                //cout << " temp->entry: " << temp->entry;
                 temp = temp->next;
             }
 
@@ -225,8 +225,8 @@ public:
 
         Node<List_entry>* temp = new Node<List_entry>;
         temp = head;
-        std::cout << "temp = " << temp->entry;
-        std::cout << " temp.next: " << temp->next->entry << endl;
+        //std::cout << "temp = " << temp->entry;
+        //std::cout << " temp.next: " << temp->next->entry << endl;
 
         for (int i = 0; i < start; i++) {
             temp = temp->next;

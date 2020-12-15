@@ -1,3 +1,4 @@
+
 #include "Utility.h"
 #include "List.h"
 #include "TIMER.H"
@@ -34,7 +35,9 @@ struct preferences {
 };
 
 //typedef int Key;
-//typedef int Record;
+typedef int Record;
+
+
 
 //typedef Key Record;
 //  Definition of a Key class:
@@ -53,10 +56,11 @@ public:
 int Key::comparisons = 0;
 
 //  Definition of a Record class:
+/*
 class Record {
 public:
     Record() { value = 0; }
-    Record(int v) { value = v; cout << "constructor " << value << endl; }
+    Record(record v) { value = v; cout << "constructor " << value << endl; }
 
     //  implicit conversion from Record to Key.
     operator Key() const { return Key(value); }
@@ -65,20 +69,21 @@ public:
         this->value = r.value;
         return *this;
     }
-    Record& operator = (const int x) {
+    Record& operator = (const record x) {
         this->value = x;
         return *this;
     }
     int operator << (const Record&) {
         return this->value;
     }
-    int getRec() const { return value; }
-    void setRec(int v) { value = v; }
+    record getRec() const { return value; }
+    void setRec(record v) { value = v; }
   
 private:
-    int value;
+    record value;
     //  Add data components.
 };
+*/
 
 //exension of created List class
 class Ordered_list: public List<Record> {
@@ -92,7 +97,7 @@ public:
     Error_code insert(const Record& data);
     Error_code insert(int position, const Record& data);
     Error_code replace(int position, const Record& data);
-    Error_code retrieve(const int position, Record& data) const;
+    //Error_code retrieve(const int position, Record& data) const;
 };
 
 //  Declare overloaded comparison operators for keys.
@@ -141,9 +146,11 @@ int main() {
     //1 == binary search
     if (user.searchMethods[1]) {
         Ordered_list testme2; //
+        cout << "about to populate" << endl;
         populate_list(testme2, user.listSize);
-        if (user.chooseKey) { test_bin_search(user.numsearches, testme2, user.key); }
-        else { test_bin_search(user.numsearches, testme2, -1); }
+        cout << "finished populating list" << endl;
+        //if (user.chooseKey) { test_bin_search(user.numsearches, testme2, user.key); }
+        //else { test_bin_search(user.numsearches, testme2, -1); }
         //function for binary search
     }
 
@@ -301,36 +308,6 @@ Error_code sequential_search(const List<Record>& the_list, const Key& target, in
 }
 
 
-Error_code Ordered_list::retrieve(int pos, Record& data) const {
-    cout << "pos: " << pos << " data: " << data.getRec() << endl;
-    if (pos == 0) {
-        data.setRec(head->entry.getRec());
-        return success;
-    }
-    else {
-        Node<Record>* temp = new Node<Record>;
-        temp = head;
-        
-        cout << "temp: " << temp->entry.getRec() << endl;
-        cout << "temp->next: " << temp->next->entry.getRec() << endl;
-        /*
-        * Current problem here:
-        * temp is set to head but head is at the tail
-        * 
-        * Now head is 1, list linkeage must be a problem
-        */
-
-        for (int i = 0; i < pos; i+= 2) {
-            temp = temp->next;
-        }
-
-        data.setRec(temp->entry.getRec());
-
-        return success;
-    }
-    return fail;
-}
-
 Error_code Ordered_list::insert(const Record& data)
 /*
 Post: If the Ordered_list is not full, the function succeeds:
@@ -340,20 +317,21 @@ Post: If the Ordered_list is not full, the function succeeds:
       Else: the function fails with the diagnostic Error_code overflow.
 */
 {
-    //check this func()
-    cout << "Inserting(): " << data.getRec() << endl;
+    cout << "Ordered_list::insert(Record) size = " << size() << " data = " << data;
     int s = size();
     int position;
+    /* teacer's code
     for (position = 0; position < s; position++) {
         Record list_data;
-        
-        retrieve(position, list_data); //check
-        cout << "for loop list_data: " << list_data.getRec() << endl;
+        retrieve(position, list_data);
+        cout << " list_data = " << list_data << endl;
         if (data >= list_data) break;
     }
-    return List<Record>::insert(/*position,*/ data); //check
-}
+    */
 
+    //cout << "position before return p = " << position << endl;
+    return List<Record>::insert(size(), data);
+}
 Error_code Ordered_list::insert(int position, const Record& data)
 /*
 Post: If the Ordered_list is not full, 0 <= position <= n,
@@ -366,7 +344,6 @@ Post: If the Ordered_list is not full, 0 <= position <= n,
       Else: the function fails with a diagnostic Error_code.
 */
 {
-    cout << "what?" << endl;
     Record list_data;
     if (position > 0) {
         retrieve(position - 1, list_data);
@@ -399,7 +376,7 @@ Uses: recursive_binary_1 and methods of the classes List and Record.
     if (bottom < top) {              // List has more than one entry.
         int mid = (bottom + top) / 2;
         the_list.retrieve(mid, data);
-        cout << "data: " << data.getRec() << "\tmid: " << mid << endl;
+        cout << "data: " << data << "\tmid: " << mid << endl;
         if (data < target)  // Reduce to top half of list.
             return recursive_binary_1(the_list, target, mid + 1, top, position);
         else                          // Reduce to bottom half of list.
@@ -415,7 +392,7 @@ Uses: recursive_binary_1 and methods of the classes List and Record.
         cout << "recursive_binary_1 else " << endl;
         position = bottom;
         the_list.retrieve(bottom, data);
-        if (data == target) return success;
+        if (target == data) return success;
         else return not_present;
     }
 }
@@ -516,28 +493,33 @@ Error_code binary_search_2(const Ordered_list& the_list, const Key& target, int&
 
 
 
-void populate_list(Ordered_list& the_list, int size) {
-    //always populate with odd integers
-    for (int i = 1; i < size*2; i += 2) {
-        Record temp(i);
-        cout << "in populate_list() " << i << endl;
-        if (the_list.insert(temp) == overflow) {
-            cout << "ERROR: List is full, populating has ended." << endl;
-            continue;
-        }
-    }
-}
-
 void populate_list(List<Record>& the_list, int size) {
     //always populate with odd integers
     for (int i = 1; i < size * 2; i += 2) {
-        Record temp(i);
+        Record temp;
         cout << "in populate_list() " << i << endl;
         if (the_list.insert(temp) == overflow) {
             cout << "ERROR: List is full, populating has ended." << endl;
             continue;
         }
+        the_list.traverse(0, the_list.size());
     }
+}
+
+
+void populate_list(Ordered_list& the_list, int size) {
+    //always populate with odd integers
+    for (int i = 1; i < size * 2; i += 2) {
+        Record temp = i;
+        cout << "in (ordered) populate_list() " << i << endl;
+        if (the_list.insert(temp) == overflow) {
+            cout << "ERROR: List is full, populating has ended." << endl;
+            continue;
+        }
+        
+    }
+    cout << "traversing to check..." << endl;
+    the_list.traverse(0, the_list.size());
 }
 
 

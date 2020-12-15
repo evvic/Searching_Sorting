@@ -72,15 +72,18 @@ public:
     int size() const { return count; }
 
     Error_code retrieve(int pos, List_entry& x) const {
+      
         if (pos == 0) {
             x = head->entry;
             return success;
         }
         else {
+            cout << "Retrieve else: ";
             Node<List_entry>* temp = new Node<List_entry>;
             temp = head;
 
             for (int i = 0; i < pos; i++) {
+                cout << " temp->entry: " << temp->entry;
                 temp = temp->next;
             }
 
@@ -90,37 +93,6 @@ public:
             return success;
         }
         return fail;
-    }
-
-
-    Error_code insert(int position, const List_entry& x) {
-        if (count > MAXSIZE) return overflow;
-        if (position < 0) return underflow;
-        if (position > count) return overflow;
-
-        Node<List_entry>* new_node = new Node<List_entry>;
-
-        if (position == 0) {
-            if (count == 0) {
-                new_node->entry = x;
-                new_node->back = NULL;
-            }
-            new_node->next = 0;
-            // following = current;
-            head = new_node;
-        }
-        else {
-            set_position(position - 1);
-            new_node->back = current;
-            new_node->next = current->next;
-        }
-
-        new_node->entry = x;
-
-        current = new_node;
-        current_position = position;
-        count++;
-        return success;
     }
 
     Error_code insert(const List_entry& x) {
@@ -155,6 +127,49 @@ public:
         count++;
         return success;
     }
+
+    Error_code insert(int position, const List_entry& x) {
+        if (count > MAXSIZE) return overflow;
+        if (position < 0) return underflow;
+        if (position > count) return overflow;
+
+        Node<List_entry>* new_node = new Node<List_entry>;
+
+        
+
+        if (position == 0) {
+            if (count == 0) {
+                new_node->entry = x;
+                new_node->back = NULL;
+            }
+            new_node->next = 0;
+            // following = current;
+            head = new_node;
+        }
+        else if (position == count) {
+            //if inserting at tail of list
+            set_position(position - 1);
+            current->next = new_node;
+            new_node->back = current;
+            new_node->next = NULL;
+        }
+        else {
+            //if inserting in middle of list
+            set_position(position - 1);
+            new_node->back = current;
+            new_node->next = current->next;
+
+        }
+
+        new_node->entry = x;
+
+        current = new_node;
+        current_position = position;
+        count++;
+        return success;
+    }
+
+    
 
     Error_code remove(int position, List_entry& x) {
         /*
@@ -206,6 +221,8 @@ public:
 
         Node<List_entry>* temp = new Node<List_entry>;
         temp = head;
+        std::cout << "temp = " << temp->entry;
+        std::cout << " temp.next: " << temp->next->entry << endl;
 
         for (int i = 0; i < start; i++) {
             temp = temp->next;

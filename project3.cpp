@@ -1,7 +1,6 @@
-
+#include "TIMER.H"
 #include "Utility.h"
 #include "List.h"
-#include "TIMER.H"
 #include "RANDOM.H"
 #include <iostream>
 #include <conio.h>

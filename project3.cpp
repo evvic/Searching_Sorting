@@ -7,6 +7,7 @@
 #include <conio.h>
 #include <iomanip>
 #include <queue>
+#include <Windows.h>
 
 /*
 * folder location:
@@ -30,7 +31,7 @@
 
 using namespace std;
 
-const int SEARCHMETHODS = 2;
+const int SEARCHMETHODS = 3;
 
 struct preferences {
     int listSize;       //user chooses size of the list to be populated
@@ -38,7 +39,11 @@ struct preferences {
     bool chooseKey;     //user chooses if they choose the key or it's generated
     int key;            //chosen key
     bool searchMethods[SEARCHMETHODS]; //[0] = sequential search, [1] = binary search
-    bool sortMethods[1];
+    bool sortMethods[1]; 
+    bool methods[2]; //search & sort
+    //sorting
+    int sortingScales;
+    bool showDetails;
 };
 
 
@@ -103,10 +108,9 @@ int Key::assignments = 0;
 class Ordered_list: public List<Record> {
 public:
     Ordered_list() : List() {
-        cout << "Ordered_list" << endl;
     }
     Ordered_list(Record& x) : List(x) {
-        cout << "Ordered_list" << endl;
+
     }
     Error_code insert(const Record& data);
     Error_code insert(int position, const Record& data);
@@ -137,9 +141,9 @@ void merge(Record* table, int l, int m, int r); //(l)eft, (m)iddle & (r)ight ind
 void quick_sort(Record* table, int l, int r);
 int partition(Record* table, int l, int r);
 void selection_sort(Record* table, int size); //(O)n^2
-sort_data test_all_sorting(Record* table, int size);
-void test_sorting_versions();
-void print_sort_reults(sort_data* grid, int loops);
+sort_data test_all_sorting(Record* table, int size, bool details);
+void test_sorting_versions(const int loops, bool details);
+void print_sort_results(sort_data* grid, int loops);
 
 //Populating functions
 void populate_list(List<Record>& the_list, int size); //always populate with odd
@@ -153,6 +157,8 @@ void print_out(string s, double t, int comparissons, int searches);
 void table_slice(int* table, int size); //displays a slice of the table, 200 max shown values
 preferences select_preferences();
 void save_results(sort_data* grid, int loops);
+void CenterString(string s);
+void describe_program();
 //swap() function in Utility.h
 
 //even Keys (0, 2, ... 2n) should always fail
@@ -165,31 +171,49 @@ void save_results(sort_data* grid, int loops);
 
 int main() {
     
+    //Intro();
+    Key begin;
     preferences user = select_preferences();
 
-    
-    //0 == sequential search
+    //if user wants search methods
+    if (user.methods[0]) {
+        CenterString("Searching Performance");
+        cout << endl;
+        //0 == sequential search
+        if (user.searchMethods[0]) {
+            List<Record> testme;
+            populate_list(testme, user.listSize);
+            if (user.chooseKey) { test_seq_search(user.numsearches, testme, user.key); }
+            else { test_seq_search(user.numsearches, testme, -1); }
+            //function for seq search
+        }
+        //1 == binary search
+        if (user.searchMethods[1]) {
+            Ordered_list testme2; //
+            populate_list(testme2, user.listSize);
+            if (user.chooseKey) { test_bin_search(user.numsearches, testme2, user.key); }
+            else { test_bin_search(user.numsearches, testme2, -1); }
+            //function for binary search
+        }
+        //performance comparison
+        if (user.searchMethods[2]) {
+            List<Record> testme;
+            populate_list(testme, user.listSize);
+            Ordered_list testme2;
+            populate_list(testme2, user.listSize);
 
-    if (user.searchMethods[0]) {
-        List<Record> testme;
-        populate_list(testme, user.listSize);
-        if (user.chooseKey) { test_seq_search(user.numsearches, testme, user.key); }
-        else { test_seq_search(user.numsearches, testme, -1); }
-        //function for seq search
+            // work on preferecnce for search preformance
+            performance_comparison(user.numsearches, testme, testme2);
+        }
     }
-    //1 == binary search
-    if (user.searchMethods[1]) {
-        Ordered_list testme2; //
-        cout << "about to populate" << endl;
-        populate_list(testme2, user.listSize);
-        cout << "finished populating list" << endl;
-        if (user.chooseKey) { test_bin_search(user.numsearches, testme2, user.key); }
-        else { test_bin_search(user.numsearches, testme2, -1); }
-        //function for binary search
-    }
-    
+    //Sorting method
+    if (user.methods[1]) {
+        CenterString("Sorting Performance");
+        cout << endl;
 
-    const int amount = 100;
+        test_sorting_versions(user.sortingScales, user.showDetails); //
+
+    }
 
     /*
     Sortable_list<Record> huh;
@@ -202,41 +226,10 @@ int main() {
 
     huh.traverse(0, amount - 1);
     */
-    
-    //Performance comparison info
-    List<Record> testme;
-    //populate_list(testme, user.listSize);
-    Ordered_list testme2; //
-    //populate_list(testme2, user.listSize);
-
-    //Sorting
-
-    test_sorting_versions(); //
-
-    
-
-    cout << endl;
-    //table_slice(table, amount);
-
-    Key test;
 
 
-    //insertion_sort(table, 1000);
-    //merge_sort(table, 0, amount - 1);
-    //quick_sort(table, 0, amount - 1);
-    //selection_sort(table, amount);
-
-    //table_slice(table, amount);
-
-    //cout << endl << "comparissons: " << Key::comparisons;
-    //cout << endl << "assignments: " << Key::assignments;
-    
-
-    //performance_comparison(user.numsearches, testme, testme2);
-
-    
-    
     //test_search(user.numsearches, testme2);
+    cout << "\nExiting...\n";
 }
 
 void performance_comparison(const int searches, List<Record>& seq_list, Ordered_list& bin_list) {
@@ -244,7 +237,7 @@ void performance_comparison(const int searches, List<Record>& seq_list, Ordered_
     * both searches should be run 10 times, with same size & order of list
     * the randomly generated key should be the same for both, changes each search 
     */
-    cout << "\tPerformance Comparison" << endl;
+    cout << endl << "\tPerformance Comparison" << endl;
     if (seq_list.size() != bin_list.size()) {
         cout << "ERROR. Comparison should have equal sized lists" << endl;
         return;
@@ -293,7 +286,6 @@ void performance_comparison(const int searches, List<Record>& seq_list, Ordered_
     //can use bin_time and seq_time to compare
 }
 
-
 void test_seq_search(int searches, List<Record>& the_list, int userkey)
 /*
 
@@ -341,7 +333,6 @@ Uses: Methods of the classes List, Random, and Timer,
     print_out("Unsuccessful", clock.elapsed_time(), Key::comparisons, searches);
 }
 
-
 void test_bin_search(int searches, Ordered_list& the_list, int userkey)
 /*
 
@@ -367,7 +358,6 @@ Uses: Methods of the classes List, Random, and Timer,
     Timer clock;
 
     for (i = 0; i < searches; i++) {
-        cout << "first for bin search" << endl;
         //setting key to user's option:
         if (userkey > -1) { target = userkey; }
         //generating random odd key:
@@ -428,36 +418,35 @@ Error_code sequential_search(const List<Record>& the_list, const Key& target, in
           Otherwise return not_present and position becomes invalid.
     */
 {
-    //cout << "sequential_search, target = " << target.the_key() << endl;
     int s = the_list.size();
     for (position = 0; position < s; position++) {
-        //cout << position << ' ';                ///////
         Record data;
         the_list.retrieve(position, data);
-        //cout << " comparrisons: " << Key::comparisons;
         if (data == target) return success;
     }
-    //cout << endl;               ////////
     position = NULL;
     return not_present;
 }
 
-void test_sorting_versions() {
-    const int loops = 6;
+void test_sorting_versions(const int userscales, bool details) {
+
     int amount = 1000; //start at 1000,, decrement by 100 each trial/loop
+    int loops = userscales;
+    cout << "loops" << loops;
 
-    sort_data capture[loops];
+    sort_data* capture = new sort_data[loops];
 
-    for (int i = 0; i < loops; i++) {
+
+    for (int i = 0; i < userscales; i++) {
         cout << endl << "LOOPING " << i << endl;
         amount -= 100;
         Record* table = new Record[amount];
         randomly_populate_table(table, amount);
-        capture[i] = test_all_sorting(table, amount);
+        capture[i] = test_all_sorting(table, amount, details);
         delete table;
     }
 
-    print_sort_reults(capture, loops);
+    print_sort_results(capture, loops);
     char garb;
     do {
         cout << endl << "Do you want to save data in a .csv file? (y/n)\n\t> ";
@@ -471,7 +460,7 @@ void test_sorting_versions() {
 }
 
 
-sort_data test_all_sorting(Record* table, const int size) {
+sort_data test_all_sorting(Record* table, const int size, bool details) {
     sort_data capture;
     sort_details record;
     Record* temp = new Record[size];
@@ -479,11 +468,13 @@ sort_data test_all_sorting(Record* table, const int size) {
     Timer clock;
 
     for (int i = 0; i < 4; i++) {
-        cout << endl << "\tNESTED LOOPING " << i << endl;
         copy_table(table, temp, size);
         Key::comparisons = 0;
         Key::assignments = 0;
-        table_slice(temp, size); //
+
+        if (details) cout << "Slice of unsorted table:" << endl;
+        if (details) table_slice(temp, size);
+
         clock.reset();
 
         switch (i) {
@@ -515,7 +506,9 @@ sort_data test_all_sorting(Record* table, const int size) {
         
         time = clock.elapsed_time();
         
-        table_slice(temp, size);
+        if (details) cout << "Slice of unsorted table:" << endl;
+        if (details) table_slice(temp, size);
+
         cout << endl << "time: " << time << " assignments: " << Key::assignments << " comparrissons: " << Key::comparisons << endl;
 
         
@@ -639,8 +632,6 @@ void selection_sort(Record* table, int size) {
     }
 }
 
-
-
 Error_code Ordered_list::insert(const Record& data)
 /*
 Post: If the Ordered_list is not full, the function succeeds:
@@ -737,14 +728,12 @@ void populate_list(List<Record>& the_list, int size) {
     //always populate with odd integers
     for (int i = 1; i < size * 2; i += 2) {
         Record temp = i;
-        //cout << "in populate_list() " << i << endl;
         if (the_list.insert(temp) == overflow) {
             cout << "ERROR: List is full, populating has ended." << endl;
             continue;
         }
         
     }
-    the_list.traverse(0, the_list.size());
 }
 
 //binary
@@ -752,15 +741,12 @@ void populate_list(Ordered_list& the_list, int size) {
     //always populate with odd integers
     for (int i = 1; i < size * 2; i += 2) {
         Record temp = i;
-        //cout << "in (ordered) populate_list() " << i << endl;
         if (the_list.insert(temp) == overflow) {
             cout << "ERROR: List is full, populating has ended." << endl;
             continue;
         }
         
     }
-    cout << "traversing to check..." << endl;
-    the_list.traverse(0, the_list.size());
 }
 
 //[0 - 10,000] range of random values into int array
@@ -785,19 +771,87 @@ void copy_table(Record* original, Record* copyto, int size) {
     }
 }
 
-
-
-
 preferences select_preferences() {
-    int limit = 15; //quickly change the max limit for the user
-    preferences user;
-    char temp;
-    string searchNames[SEARCHMETHODS] = { "sequential search", "binary search" };
+    const int limit = 15; //quickly change the max limit for the user
 
-    cout << "Select search methods to test." << endl;
-    for (int i = 0; i < SEARCHMETHODS; i++) {
+    preferences user;
+  
+    user.sortingScales = 0;
+    user.searchMethods[0] = user.searchMethods[1] = false;
+    user.numsearches = 0;
+    user.listSize = 0;
+    user.chooseKey = false;
+    user.key = -1;
+    char temp;
+
+    string searchNames[SEARCHMETHODS] = { "sequential search", "binary search", "performace comparison between sequential & binary search" };
+    string methods[] = { "search", "sort" };
+    
+
+    cout << "Select what performances to run." << endl;
+    for (int i = 0; i < 2; i++) {
         do {
-            cout << "Use " << searchNames[i] << "? (y/n)\n\t> ";
+            cout << "Run " << methods[i] << " performace comparison? (y/n)" << endl
+                << "*enter 'q' for more information*\n\t> ";
+            temp = _getche();
+            temp = toupper(temp);
+            cout << endl;
+            if (temp == 'Q') describe_program();
+        } while (temp != 'N' && temp != 'Y');
+
+        switch (temp) {
+        case 'N':
+            user.methods[i] = false; //change these
+            break;
+        case 'Y':
+            user.methods[i] = true; //
+            break;
+        default:
+            cout << "ERROR 1: User key choice wasn't clear." << endl;
+            break;
+        }
+    }
+    cout << endl;
+
+    if (user.methods[0]) {
+        //run searching stuff
+        cout << "Searching Options:" << endl;
+        cout << "\tSelect search methods to test." << endl;
+        for (int i = 0; i < SEARCHMETHODS; i++) {
+            do {
+                cout << "\tUse '" << searchNames[i] << "'? (y/n)\n\t\t> ";
+                temp = _getche();
+                temp = toupper(temp);
+                cout << endl;
+            } while (temp != 'N' && temp != 'Y');
+
+            switch (temp) {
+            case 'N':
+                user.searchMethods[i] = false;
+                break;
+            case 'Y':
+                user.searchMethods[i] = true;
+                break;
+            default:
+                cout << "\tERROR 1: User key choice wasn't clear." << endl;
+                break;
+            }
+        }
+
+        do {
+            cout << "\tEnter desired list size [1-" << limit << "].\n\t\t> ";
+            cin >> user.listSize;
+            cout << endl;
+        } while (user.listSize > limit || user.listSize <= 0);
+
+        do {
+            cout << "\tEnter how many times a search method will be used [1-" << limit << "].\n\t\t> ";
+            cin >> user.numsearches;
+            cout << endl;
+        } while (user.numsearches > limit || user.numsearches <= 0);
+
+        do {
+            cout << "\tDo you want to enter your own key? (y/n)\n\t\t> ";
             temp = _getche();
             temp = toupper(temp);
             cout << endl;
@@ -805,59 +859,54 @@ preferences select_preferences() {
 
         switch (temp) {
         case 'N':
-            user.searchMethods[i] = false;
+            user.chooseKey = false;
             break;
         case 'Y':
-            user.searchMethods[i] = true;
+            user.chooseKey = true;
             break;
         default:
-            cout << "ERROR 1: User key choice wasn't clear." << endl;
+            cout << "\tERROR 2: User key choice wasn't clear." << endl;
             break;
         }
+        if (user.chooseKey) {
+            do {
+                cout << "\tEnter the key to be searched for [integer 0-" << limit << "]." << endl
+                    << "\tExpect even values to be unsuccessful." << endl
+                    << "\t\t> ";
+                cin >> user.key;
+                cout << endl;
+            } while (user.key < 0 || user.key >(limit * 3));
+        }
     }
-
-    do {
-        cout << "Enter desired list size [1-" << limit << "].\n\t> ";
-        cin >> user.listSize;
-        cout << endl;
-    } while (user.listSize > limit || user.listSize <= 0);
-
-    do {
-        cout << "Enter how many times a search method will be used [1-" << limit << "].\n\t> ";
-        cin >> user.numsearches;
-        cout << endl;
-    } while (user.numsearches > limit || user.numsearches <= 0);
-
-    do {
-        cout << "Do you want to enter your own key? (y/n)\n\t> ";
-        temp = _getche();
-        temp = toupper(temp);
-        cout << endl;
-    } while (temp != 'N' && temp != 'Y');
-
-    switch (temp) {
-    case 'N': 
-        user.chooseKey = false;
-        break;
-    case 'Y': 
-        user.chooseKey = true;
-        break;
-    default:
-        cout << "ERROR 2: User key choice wasn't clear." << endl;
-        break;
-    }
-    /*
-    if (user.chooseKey) {
+    if (user.methods[1]) {
+        //sorting options
+        cout << "Sorting Options:" << endl;
         do {
-            cout << "Enter the key to be searched for [integer 0-" << limit << "]." << endl
-                << "Expect even values to be unsuccessful." << endl
-                << "\t> ";
-            cin >> user.key;
+            cout << "\tEnter number of scales to be compared [1-" << 10 << "].\n ";
+            cout << "\ti.e. 4 scales would give 1000, 900, 800, & 700 sorting size trials.\n\t> ";
+            cin >> user.sortingScales;
             cout << endl;
-        } while (user.key < 0 || user.key > (limit * 3));
-    }
-    */
+        } while (user.sortingScales > 10 || user.sortingScales <= 0);
+        do {
+            cout << "\tShow extra sorting details? (y/n)\n\t\t> ";
+            temp = _getche();
+            temp = toupper(temp);
+            cout << endl;
+        } while (temp != 'N' && temp != 'Y');
 
+        switch (temp) {
+        case 'N':
+            user.showDetails = false;
+            break;
+        case 'Y':
+            user.showDetails = true;
+            break;
+        default:
+            cout << "\tERROR 2: User key choice wasn't clear." << endl;
+            break;
+        }
+
+    }
     return user;
 }
 
@@ -881,17 +930,14 @@ void table_slice(int* table, int size) {
     cout << endl;
 }
 
-void print_sort_reults(sort_data* grid, int loops) {
+void print_sort_results(sort_data* grid, int loops) {
     int amount = 1000; //always starts at 1000
     string sortmethods[] = { "Insertion Sort", "Selection sort", "merge sort", "quick sort" };
   
-    for (int i = loops; i > 0; i--) {
-        //double for loop
-    }
     int first = 20;
     int second = 15;
     int third = 7;
-    int maxarr = loops - 1;
+    int maxarr = loops;
     cout << endl;
     cout << setw(first) << left << "NUMBERS" << setw(second) << " ";
     for (int i = maxarr; i > 0; i--) {
@@ -986,10 +1032,8 @@ void print_sort_reults(sort_data* grid, int loops) {
     }
 
 }       
-
-
 void save_results(sort_data* grid, int loops) {
-    int maxarr = loops - 1;
+    int maxarr = loops;
     int amount = 1000;
     ofstream results;
     results.open("test.csv"/*, ios_base::app*/);
@@ -1088,4 +1132,40 @@ void save_results(sort_data* grid, int loops) {
     }
     cout << "done.";
     results.close();
+}
+
+void CenterString(string s) {
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    if (!GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
+    {
+        // an error occourred
+        cerr << "Cannot determine console size." << endl;
+    }
+    else
+    {
+        //cout << "\n\nThe console is " << csbi.srWindow.Right - csbi.srWindow.Left << " wide." << endl; //checkpoint
+    }
+
+
+    int c_width = csbi.srWindow.Right - csbi.srWindow.Left;
+    int length = s.size();
+    int position = (int)((c_width - length) / 2);
+    for (int i = 0; i < position; i++) {
+        cout << ' ';
+    }
+    cout << s;
+}
+
+void describe_program() {
+    char temp;
+    cout << endl << endl << endl;
+    CenterString("Running Performance Tests On Search & Sort Algorithms");
+    cout << endl << endl;
+    cout << "\tChoose whether to run search or sort performance test, or both!" << endl << endl;
+    cout << "\tThere are options to configure the performance tests." << endl
+        << "\tThese tests will compare each search/sort algorithm given the selected options." << endl
+        << "\tPress a key to continue > ";
+    temp = _getche();
+    cout << endl << endl;
 }

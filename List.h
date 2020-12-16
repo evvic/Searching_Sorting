@@ -28,7 +28,6 @@ template <class List_entry>
 class List {
 public:
     List() {
-        cout << "List.h" << endl;
         current_position = count = 0;
         current = head = NULL;
     }
@@ -97,15 +96,12 @@ public:
 
     Error_code insert(const List_entry& x) {
         //inserting at tail position
-        cout << "insert val: " << x << endl;
         int position = count;
         if (count > MAXSIZE) return overflow;
         if (position < 0) return underflow;
         if (position > count) return overflow;
 
         Node<List_entry>* new_node = new Node<List_entry>;
-
-
 
         if (position == 0) {
             if (count == 0) {
@@ -219,7 +215,6 @@ public:
     }
 
     Error_code traverse(int start, int end) {
-        cout << "in traverse" << endl; //
         if (start == end) return duplicate_error;
         if (count < 1) return underflow;
         if (start > count || end > count) return overflow;
@@ -227,8 +222,7 @@ public:
 
         Node<List_entry>* temp = new Node<List_entry>;
         temp = head;
-        std::cout << "temp = " << temp->entry;
-        std::cout << " temp.next: " << temp->next->entry << endl;
+
 
         for (int i = 0; i < start; i++) {
             temp = temp->next;

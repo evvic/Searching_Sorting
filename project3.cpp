@@ -18,6 +18,10 @@
 * 
 * for part 5, add the option to save the data to an csv sheet
 * 
+* add ONE more sort function (class n^2)
+*  -> might have to make new copies of each sort and implement with List
+* 
+* then make a test function displaying results
 * 
 * idea: for the last step sorting the array with performance, use the oen same array
 *       but dont pass as reference in the origina call of each sort function
@@ -116,6 +120,7 @@ void merge_sort(Record* table, int l, int r); //(l)eft & (r)ight indexes of suba
 void merge(Record* table, int l, int m, int r); //(l)eft, (m)iddle & (r)ight indexes of subarray. n*log(n)
 void quick_sort(Record* table, int l, int r);
 int partition(Record* table, int l, int r);
+void selection_sort(Record* table, int size); //(O)n^2
 
 //Populating functions
 void populate_list(List<Record>& the_list, int size); //always populate with odd
@@ -185,7 +190,8 @@ int main() {
 
     //insertion_sort(table, 1000);
     //merge_sort(table, 0, amount - 1);
-    quick_sort(table, 0, amount - 1);
+    //quick_sort(table, 0, amount - 1);
+    selection_sort(table, amount);
 
     table_slice(table, amount);
 
@@ -499,6 +505,20 @@ int partition(Record* table, int l, int r) {
     return i + 1;
 }
 
+void selection_sort(Record* table, int size) {
+    int min;
+
+    for (int i = 0; i < size - 1; i++) {
+        min = i;
+        for (int j = i + 1; j < size; j++) {
+            if ((Key)table[j] < (Key)table[min]) min = j;
+        }
+
+        Key temp(table[min]);
+        table[min] = table[i];
+        table[i] = temp.assign_key();
+    }
+}
 
 Error_code Ordered_list::insert(const Record& data)
 /*

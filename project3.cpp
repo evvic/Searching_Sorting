@@ -82,6 +82,9 @@ Error_code run_recursive_binary_1(const Ordered_list& the_list, const Key& targe
 
 //Sort functions
 void insertion_sort(int* table, int size);
+void merge_sort(int* table, int l, int r); //(l)eft & (r)ight indexes of subarray. RIGHT index == size - 1!!!
+void merge(int* table, int l, int m, int r); //(l)eft, (m)iddle & (r)ight indexes of subarray
+
 
 //Populating functions
 void populate_list(List<Record>& the_list, int size); //always populate with odd
@@ -135,17 +138,21 @@ int main() {
     populate_list(testme2, user.listSize);
 
     //Sorting
-    int table[1000]; //default should be 1000
+
+    const int amount = 1000;
+
+    int table[amount]; //default should be 1000
 
 
-    randomly_populate_table(table, 1000);
+    randomly_populate_table(table, amount);
 
     cout << endl;
-    table_slice(table, 1000);
+    table_slice(table, amount);
 
-    insertion_sort(table, 1000);
+    //insertion_sort(table, 1000);
+    merge_sort(table, 0, amount - 1);
 
-    table_slice(table, 1000);
+    table_slice(table, amount);
 
     //performance_comparison(user.numsearches, testme, testme2);
 
@@ -372,6 +379,54 @@ void insertion_sort(int* table, int size) {
         }
         table[j + 1] = key;
     }
+}
+
+//(l)eft & (r)ight indexes of subarray
+void merge_sort(int* table, int l, int r) {
+    if (l >= r) return; //recursively
+
+    int m = (l + r - 1) / 2;
+    merge_sort(table, l, m);    //first sub array
+    merge_sort(table, m + 1, r);//second sub-array
+    merge(table, l, m, r);      //merge sub-arrays together
+}
+
+//(l)eft, (m)iddle & (r)ight indexes of subarray
+void merge(int* table, int l, int m, int r) {
+    const int size1 = m - l + 1;
+    const int size2 = r - m;
+
+    //dynamically allocate arrays
+    int* left = new int[size1];
+    int* right = new int[size2];
+
+    //fill temp arrays
+    for (int i = 0; i < size1; i++) { left[i] = table[l + i]; } 
+    for (int i = 0; i < size2; i++) { right[i] = table[m + 1 + i]; }
+
+    //index of 1st, 2nd, & merged sub-array
+    int i = 0, j = 0, k = l;
+
+    //merge the temp arrays into table
+    while (i < size1 && j < size2) {
+        if (left[i] <= right[j]) {
+            table[k] = left[i];
+            i++;
+        }
+        else {
+            table[k] = right[j];
+            j++;
+        }
+        k++;
+    }
+
+    //add any remaining values in temp arrays to table
+    while (i < size1) { table[k++] = left[i++]; }
+    while (j < size2) { table[k++] = right[j++]; }
+
+    //deallocate arrays
+    delete[] left;
+    delete[] right;
 }
 
 Error_code Ordered_list::insert(const Record& data)

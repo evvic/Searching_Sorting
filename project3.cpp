@@ -159,6 +159,7 @@ preferences select_preferences();
 void save_results(sort_data* grid, int loops);
 void CenterString(string s);
 void describe_program();
+void Intro();
 //swap() function in Utility.h
 
 //even Keys (0, 2, ... 2n) should always fail
@@ -171,7 +172,8 @@ void describe_program();
 
 int main() {
     
-    //Intro();
+    Intro();
+
     Key begin;
     preferences user = select_preferences();
 
@@ -1168,4 +1170,36 @@ void describe_program() {
         << "\tPress a key to continue > ";
     temp = _getche();
     cout << endl << endl;
+}
+
+void Intro() {
+
+
+    int length = 5;
+
+    string searching[] = { "   ______     ______     ______     ______     ______     __  __     __     __   __     ______    ",
+                "/\\  ___\\   /\\  ___\\   /\\  __ \\   /\\  == \\   /\\  ___\\   /\\ \\_\\ \\   /\\ \\   /\\ \"-.\\ \\   /\\  ___\\ ",
+                 " \\ \\___  \\  \\ \\  __\\   \\ \\  __ \\  \\ \\  __ <  \\ \\ \\____  \\ \\  __ \\  \\ \\ \\  \\ \\ \\ -. \\  \\ \\ \\__ \\ ",
+                " \\/\\_____\\  \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_\\  \\ \\_\\\\\"\\_\\  \\ \\_____\\",
+                "   \\/_____/   \\/_____/   \\/_/\\/_/   \\/_/ /_/   \\/_____/   \\/_/\\/_/   \\/_/   \\/_/ \\/_/   \\/_____/ "
+
+    };
+    string sorting[] = {
+        "  ______     ______     ______     ______   __     __   __     ______    ",
+        "/\\  ___\\   /\\  __ \\   /\\  == \\   /\\__  _\\ /\\ \\   /\\ \"-.\\ \\   /\\  ___\\  ",
+        " \\ \\___  \\  \\ \\ \\/\\ \\  \\ \\  __<   \\/_/\\ \\/ \\ \\ \\  \\ \\ \\-.  \\  \\ \\ \\__ \\  ",
+        " \\/\\_____\\  \\ \\_____\\  \\ \\_\\ \\_\\    \\ \\_\\  \\ \\_\\  \\ \\_\\\\\"\\_\\  \\ \\_____\\",
+        "   \\/_____/   \\/_____/   \\/_/ /_/     \\/_/   \\/_/   \\/_/ \\/_/   \\/_____/ "
+
+    };
+    for (int i = 0; i < length; i++) {
+        CenterString(searching[i]);
+        cout << endl;
+    }
+    for (int i = 0; i < length; i++) {
+        CenterString(sorting[i]);
+        cout << endl;
+    }
+    describe_program();
+
 }

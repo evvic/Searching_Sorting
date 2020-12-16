@@ -16,4 +16,11 @@ enum Error_code {
 
 bool user_says_yes();
 
+template <class T>
+void swap(T& x, T& y) {
+	T temp = x;
+	x = y;
+	y = temp;
+}
+
 #endif

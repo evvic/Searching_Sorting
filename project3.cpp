@@ -12,9 +12,15 @@
 * cd desktop/Programming 3/SearchingSorting_Project_3/SearchingSorting_Project_3/Searching_Sorting
 * 
 * NEXT STEP
-* insertion sort()
-* [done] sort a table of about 1,000 items (table?)
-* [done] displays the first 200 values before sorting and after to make sure at least a slice of it worked
+* 
+* when comparing sort methods,
+* operations = num of comparrisons + num of assignments
+* 
+* for part 5, add the option to save the data to an csv sheet
+* 
+* 
+* idea: for the last step sorting the array with performance, use the oen same array
+*       but dont pass as reference in the origina call of each sort function
 */
 
 using namespace std;
@@ -40,14 +46,38 @@ private:
     int key;
 public:
     static int comparisons;
+    static int assignments; //for sorting
     Key(int x = 0) {
         key = x;
+        assignments++;
     }
     int the_key() const { return key; }
-    void getKey(int x) { key = x; }
+    int assign_key() const{
+        assignments++;
+        return key;
+    }
+    void setKey(int x) { key = x; }
+
+    int operator = (Key& k) {
+        assignments++;
+        this->key = k.the_key();
+        return this->key;
+    }
+    /*int operator = (int k) {
+        assignments++;
+        this->key = k;
+        return this->key;
+    }*/
+    Key& operator = (int k) {
+        assignments++;
+        this->key = k;
+        return *this;
+    }
+ 
 };
 
 int Key::comparisons = 0;
+int Key::assignments = 0;
 
 //exension of created List class
 class Ordered_list: public List<Record> {
@@ -81,21 +111,23 @@ Error_code recursive_binary_1(const Ordered_list& the_list, const Key& target, i
 Error_code run_recursive_binary_1(const Ordered_list& the_list, const Key& target, int& position);
 
 //Sort functions
-void insertion_sort(int* table, int size);
-void merge_sort(int* table, int l, int r); //(l)eft & (r)ight indexes of subarray. RIGHT index == size - 1!!!
-void merge(int* table, int l, int m, int r); //(l)eft, (m)iddle & (r)ight indexes of subarray
-
+void insertion_sort(Record* table, int size);
+void merge_sort(Record* table, int l, int r); //(l)eft & (r)ight indexes of subarray. RIGHT index == size - 1!!!
+void merge(Record* table, int l, int m, int r); //(l)eft, (m)iddle & (r)ight indexes of subarray. n*log(n)
+void quick_sort(Record* table, int l, int r);
+int partition(Record* table, int l, int r);
 
 //Populating functions
 void populate_list(List<Record>& the_list, int size); //always populate with odd
 void populate_list(Ordered_list& the_list, int size); //op with odd
 void randomly_populate_list(List<Record>& the_list, int size); //[0 - 10,000] range of random values
-void randomly_populate_table(int* table, int size); //[0 - 10,000] range of random values into int array
+void randomly_populate_table(Record* table, int size); //[0 - 10,000] range of random values into int array
 
 //Misc
 void print_out(string s, double t, int comparissons, int searches);
 void table_slice(int* table, int size); //displays a slice of the table, 200 max shown values
 preferences select_preferences();
+//swap() function in Utility.h
 
 //even Keys (0, 2, ... 2n) should always fail
 //while odd keys (1, 3, ... 2n + 1) should be successful (unless too high or low)
@@ -149,10 +181,16 @@ int main() {
     cout << endl;
     table_slice(table, amount);
 
+    Key test;
+
     //insertion_sort(table, 1000);
-    merge_sort(table, 0, amount - 1);
+    //merge_sort(table, 0, amount - 1);
+    quick_sort(table, 0, amount - 1);
 
     table_slice(table, amount);
+
+    cout << endl << "comparissons: " << Key::comparisons;
+    cout << endl << "assignments: " << Key::assignments;
 
     //performance_comparison(user.numsearches, testme, testme2);
 
@@ -364,26 +402,29 @@ Error_code sequential_search(const List<Record>& the_list, const Key& target, in
     return not_present;
 }
 
-void insertion_sort(int* table, int size) {
-    int key, j = 0;
+void insertion_sort(Record* table, int size) {
+    int j = 0;
+    Key key;
 
     for (int i = 0; i < size; i++) {
-
-        key = table[i];
+        
+        key = table[i]; //Key::comparisons++;
         j = i - 1;
 
         while (j >= 0 && key < table[j]) {
-            table[j + 1] = table[j];
+            Key temp(table[j]);
+            table[j + 1] = temp.the_key();
+            //Key::assignments++; 
             j--;
             
         }
-        table[j + 1] = key;
+        table[j + 1] = key.the_key();
     }
 }
 
 //(l)eft & (r)ight indexes of subarray
-void merge_sort(int* table, int l, int r) {
-    if (l >= r) return; //recursively
+void merge_sort(Record* table, int l, int r) {
+    if ((Key)l >= (Key)r) return; //recursively
 
     int m = (l + r - 1) / 2;
     merge_sort(table, l, m);    //first sub array
@@ -392,15 +433,15 @@ void merge_sort(int* table, int l, int r) {
 }
 
 //(l)eft, (m)iddle & (r)ight indexes of subarray
-void merge(int* table, int l, int m, int r) {
+void merge(Record* table, int l, int m, int r) {
     const int size1 = m - l + 1;
     const int size2 = r - m;
 
     //dynamically allocate arrays
-    int* left = new int[size1];
-    int* right = new int[size2];
+    Key* left = new Key[size1];
+    Key* right = new Key[size2];
 
-    //fill temp arrays
+    //fill temp arrays                  Key   =  int
     for (int i = 0; i < size1; i++) { left[i] = table[l + i]; } 
     for (int i = 0; i < size2; i++) { right[i] = table[m + 1 + i]; }
 
@@ -410,24 +451,54 @@ void merge(int* table, int l, int m, int r) {
     //merge the temp arrays into table
     while (i < size1 && j < size2) {
         if (left[i] <= right[j]) {
-            table[k] = left[i];
+            table[k] = left[i].assign_key();
             i++;
         }
         else {
-            table[k] = right[j];
+            table[k] = right[j].assign_key();
             j++;
         }
         k++;
     }
 
     //add any remaining values in temp arrays to table
-    while (i < size1) { table[k++] = left[i++]; }
-    while (j < size2) { table[k++] = right[j++]; }
+    while (i < size1) { table[k++] = left[i++].assign_key(); }
+    while (j < size2) { table[k++] = right[j++].assign_key(); }
 
     //deallocate arrays
     delete[] left;
     delete[] right;
 }
+
+void quick_sort(Record* table, int l, int r) {
+    if ((Key)l < (Key)r) {
+        int m = partition(table, l, r);
+
+        //seperate quick sort at the partition index or (m)iddle
+        quick_sort(table, l, m - 1);
+        quick_sort(table, m + 1, r);
+    }
+}
+
+int partition(Record* table, int l, int r) {
+    Key pivot(table[r]);
+    int i = (l - 1);
+
+    for (int j = l; j <= r; j++) {
+        if (table[j] < pivot) {
+            i++;
+            Key temp(table[i]);
+            table[i] = table[j];
+            table[j] = temp.assign_key();
+        }
+    }
+    Key swap(table[i + 1]);
+    table[i + 1] = table[r];
+    table[r] = swap.assign_key();
+
+    return i + 1;
+}
+
 
 Error_code Ordered_list::insert(const Record& data)
 /*
@@ -552,7 +623,7 @@ void populate_list(Ordered_list& the_list, int size) {
 }
 
 //[0 - 10,000] range of random values into int array
-void randomly_populate_table(int* table, int size) {
+void randomly_populate_table(Record* table, int size) {
     Random guy(false);  //false sets seed to random
     for (int i = 0; i < size; i++) {
         table[i] = guy.random_integer(0, 10000);

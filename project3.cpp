@@ -13,8 +13,8 @@
 * 
 * NEXT STEP
 * insertion sort()
-* sort a table of about 1,000 items (table?)
-* displays the first 200 values before sorting and after to make sure at least a slice of it worked
+* [done] sort a table of about 1,000 items (table?)
+* [done] displays the first 200 values before sorting and after to make sure at least a slice of it worked
 */
 
 using namespace std;
@@ -33,8 +33,6 @@ struct preferences {
 //typedef int Key;
 typedef int Record;
 
-
-
 //typedef Key Record;
 //  Definition of a Key class:
 class Key {
@@ -50,36 +48,6 @@ public:
 };
 
 int Key::comparisons = 0;
-
-//  Definition of a Record class:
-/*
-class Record {
-public:
-    Record() { value = 0; }
-    Record(record v) { value = v; cout << "constructor " << value << endl; }
-
-    //  implicit conversion from Record to Key.
-    operator Key() const { return Key(value); }
-
-    Record& operator = (const Record& r) {
-        this->value = r.value;
-        return *this;
-    }
-    Record& operator = (const record x) {
-        this->value = x;
-        return *this;
-    }
-    int operator << (const Record&) {
-        return this->value;
-    }
-    record getRec() const { return value; }
-    void setRec(record v) { value = v; }
-  
-private:
-    record value;
-    //  Add data components.
-};
-*/
 
 //exension of created List class
 class Ordered_list: public List<Record> {
@@ -104,21 +72,26 @@ bool operator >=(const Key& x, const Key& y);
 bool operator <=(const Key& x, const Key& y);
 bool operator !=(const Key& x, const Key& y);
 
-
+//Search functions
 void test_seq_search(int searches, List<Record>& the_list, int userkey);
 void test_bin_search(int searches, Ordered_list& the_list, int userkey);
 void performance_comparison(int searches, List<Record>& seq_list, Ordered_list& bin_list);
 Error_code sequential_search(const List<Record>& the_list, const Key& target, int& position);
-
 Error_code recursive_binary_1(const Ordered_list& the_list, const Key& target, int bottom, int top, int& position);
 Error_code run_recursive_binary_1(const Ordered_list& the_list, const Key& target, int& position);
 
-void print_out(string s, double t, int comparissons, int searches);
+//Sort functions
+void insertion_sort(int* table, int size);
+
+//Populating functions
 void populate_list(List<Record>& the_list, int size); //always populate with odd
 void populate_list(Ordered_list& the_list, int size); //op with odd
 void randomly_populate_list(List<Record>& the_list, int size); //[0 - 10,000] range of random values
 void randomly_populate_table(int* table, int size); //[0 - 10,000] range of random values into int array
-void table_slice(int* table, int size);
+
+//Misc
+void print_out(string s, double t, int comparissons, int searches);
+void table_slice(int* table, int size); //displays a slice of the table, 200 max shown values
 preferences select_preferences();
 
 //even Keys (0, 2, ... 2n) should always fail
@@ -165,10 +138,14 @@ int main() {
     int table[1000]; //default should be 1000
 
 
-    randomly_populate_table(table, user.listSize);
+    randomly_populate_table(table, 1000);
 
-    
+    cout << endl;
+    table_slice(table, 1000);
 
+    insertion_sort(table, 1000);
+
+    table_slice(table, 1000);
 
     //performance_comparison(user.numsearches, testme, testme2);
 
@@ -380,6 +357,23 @@ Error_code sequential_search(const List<Record>& the_list, const Key& target, in
     return not_present;
 }
 
+void insertion_sort(int* table, int size) {
+    int key, j = 0;
+
+    for (int i = 0; i < size; i++) {
+
+        key = table[i];
+        j = i - 1;
+
+        while (j >= 0 && key < table[j]) {
+            table[j + 1] = table[j];
+            j--;
+            
+        }
+        table[j + 1] = key;
+    }
+}
+
 Error_code Ordered_list::insert(const Record& data)
 /*
 Post: If the Ordered_list is not full, the function succeeds:
@@ -504,7 +498,7 @@ void populate_list(Ordered_list& the_list, int size) {
 
 //[0 - 10,000] range of random values into int array
 void randomly_populate_table(int* table, int size) {
-    Random guy;
+    Random guy(false);  //false sets seed to random
     for (int i = 0; i < size; i++) {
         table[i] = guy.random_integer(0, 10000);
     }
@@ -591,4 +585,17 @@ void print_out(string s, double t, int comparissons, int searches) {
 
     cout << left << setw(13) << "Status" << setw(6) << "Time" << setw(13) << "Comparissons" << setw(9) << "Searches" << endl;
     cout << left << setw(13) << s << setw(6) << t << setw(13) << comparissons << setw(9) << searches << endl;
+}
+
+//prints out a slice of the table to check if it is currently sorted
+void table_slice(int* table, int size) {
+    int amount = 10;
+    if (size > 200) amount = 200;       //if table is large, show max of 200 values
+    else if (size <= 10) amount = size; //if the table is small just display the whole thing
+    else amount = size / 2;             //size < 200, show just first half of values
+
+    for (int i = 0; i < amount; i++) {
+        cout << table[i] << ' ';
+    }
+    cout << endl;
 }

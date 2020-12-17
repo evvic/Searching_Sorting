@@ -11,22 +11,13 @@
 
 /*
 * folder location:
-* cd desktop/Programming 3/SearchingSorting_Project_3/SearchingSorting_Project_3/Searching_Sorting
+* cd desktop/'Programming 3'/SearchingSorting_Project_3/SearchingSorting_Project_3/Searching_Sorting
 * 
 * NEXT STEP
 * 
-* when comparing sort methods,
-* operations = num of comparrisons + num of assignments
+* fix table displaying garbage data in 1st columns
 * 
-* for part 5, add the option to save the data to an csv sheet
-* 
-* add ONE more sort function (class n^2)
-*  -> might have to make new copies of each sort and implement with List
-* 
-* then make a test function displaying results
-* 
-* idea: for the last step sorting the array with performance, use the oen same array
-*       but dont pass as reference in the origina call of each sort function
+* write report
 */
 
 using namespace std;
@@ -448,6 +439,8 @@ void test_sorting_versions(const int userscales, bool details) {
         delete table;
     }
 
+    cout << "\n\tTESTING " << capture[0].insertion_sort.time << ' ' << capture[0].insertion_sort.comparrisons << ' ' << capture[0].insertion_sort.assignments << endl;
+
     print_sort_results(capture, loops);
     char garb;
     do {
@@ -516,7 +509,7 @@ sort_data test_all_sorting(Record* table, const int size, bool details) {
         
 
     }
-
+    cout << "\ninsertion sort\n" << capture.selection_sort.time << ' ' << capture.selection_sort.comparrisons << ' ' << capture.selection_sort.assignments << ' ' << capture.selection_sort.operations << endl;
     return capture;
 
 
@@ -718,7 +711,6 @@ Uses: recursive_binary_1 and methods of the classes List and Record.
     }
 }
 
-
 Error_code run_recursive_binary_1(const Ordered_list& the_list, const Key& target, int& position)
 {
     return recursive_binary_1(the_list, target, 0, the_list.size() - 1, position);
@@ -787,14 +779,14 @@ preferences select_preferences() {
     char temp;
 
     string searchNames[SEARCHMETHODS] = { "sequential search", "binary search", "performace comparison between sequential & binary search" };
-    string methods[] = { "search", "sort" };
+    string methods[] = { "SEARCH", "SORT" };
     
 
-    cout << "Select what performances to run." << endl;
+    cout << "Select what performances to run." << endl
+        << "*enter 'q' for more information*" << endl << endl;
     for (int i = 0; i < 2; i++) {
         do {
-            cout << "Run " << methods[i] << " performace comparison? (y/n)" << endl
-                << "*enter 'q' for more information*\n\t> ";
+            cout << "Run " << methods[i] << " performace comparison? (y/n)\n\t> ";
             temp = _getche();
             temp = toupper(temp);
             cout << endl;
@@ -825,6 +817,7 @@ preferences select_preferences() {
                 temp = _getche();
                 temp = toupper(temp);
                 cout << endl;
+                if (temp == 'Q') describe_program();
             } while (temp != 'N' && temp != 'Y');
 
             switch (temp) {
@@ -847,38 +840,45 @@ preferences select_preferences() {
         } while (user.listSize > limit || user.listSize <= 0);
 
         do {
-            cout << "\tEnter how many times a search method will be used [1-" << limit << "].\n\t\t> ";
+            cout << "\tEnter how many times a search method will be used [1-" << limit << "].\n";
+            if (user.searchMethods[2]) cout << "\tFor performance comparison, choose more than 10 for stable results.\n";
+            cout << "\t\t> ";
             cin >> user.numsearches;
             cout << endl;
         } while (user.numsearches > limit || user.numsearches <= 0);
 
-        do {
-            cout << "\tDo you want to enter your own key? (y/n)\n\t\t> ";
-            temp = _getche();
-            temp = toupper(temp);
-            cout << endl;
-        } while (temp != 'N' && temp != 'Y');
-
-        switch (temp) {
-        case 'N':
-            user.chooseKey = false;
-            break;
-        case 'Y':
-            user.chooseKey = true;
-            break;
-        default:
-            cout << "\tERROR 2: User key choice wasn't clear." << endl;
-            break;
-        }
-        if (user.chooseKey) {
+        //key is not an option for performance comparison so don't show that option if it's the only one selected
+        if (user.searchMethods[0] || user.searchMethods[1]) {
             do {
-                cout << "\tEnter the key to be searched for [integer 0-" << limit << "]." << endl
-                    << "\tExpect even values to be unsuccessful." << endl
-                    << "\t\t> ";
-                cin >> user.key;
+                cout << "\tDo you want to enter your own key? (y/n)\n\t\t> ";
+                temp = _getche();
+                temp = toupper(temp);
                 cout << endl;
-            } while (user.key < 0 || user.key >(limit * 3));
+                if (temp == 'Q') describe_program();
+            } while (temp != 'N' && temp != 'Y');
+
+            switch (temp) {
+            case 'N':
+                user.chooseKey = false;
+                break;
+            case 'Y':
+                user.chooseKey = true;
+                break;
+            default:
+                cout << "\tERROR 2: User key choice wasn't clear." << endl;
+                break;
+            }
+            if (user.chooseKey) {
+                do {
+                    cout << "\tEnter the key to be searched for [integer 0-" << limit * 2 << "]." << endl
+                        << "\tExpect even values to be unsuccessful." << endl
+                        << "\t\t> ";
+                    cin >> user.key;
+                    cout << endl;
+                } while (user.key < 0 || user.key >(limit * 3));
+            }
         }
+        
     }
     if (user.methods[1]) {
         //sorting options
@@ -894,6 +894,7 @@ preferences select_preferences() {
             temp = _getche();
             temp = toupper(temp);
             cout << endl;
+            if (temp == 'Q') describe_program();
         } while (temp != 'N' && temp != 'Y');
 
         switch (temp) {
@@ -939,74 +940,75 @@ void print_sort_results(sort_data* grid, int loops) {
     int first = 20;
     int second = 15;
     int third = 7;
-    int maxarr = loops;
+    int maxarr = loops - 1;
+
     cout << endl;
     cout << setw(first) << left << "NUMBERS" << setw(second) << " ";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << amount - (100 * i);
     }
 
     cout << endl << setw(first) << "Insertion SOrt";
     cout << setw(second) << "time";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << setprecision(3) << grid[0].insertion_sort.time;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "comparrisons";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].insertion_sort.comparrisons;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "assignments";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].insertion_sort.assignments;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "operations";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].insertion_sort.operations;
     }
 
     cout << endl << setw(first) << "Selection SOrt";
     cout << setw(second) << "time";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << setprecision(4) << grid[i].selection_sort.time;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "comparrisons";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].selection_sort.comparrisons;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "assignments";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].selection_sort.assignments;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "operations";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].selection_sort.operations;
     }
 
 
     cout << endl << setw(first) << "Merge SOrt";
     cout << setw(second) << "time";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << setprecision(4) << grid[i].merge_sort.time;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "comparrisons";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].merge_sort.comparrisons;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "assignments";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].merge_sort.assignments;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "operations";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].merge_sort.operations;
     }
 
@@ -1014,122 +1016,122 @@ void print_sort_results(sort_data* grid, int loops) {
 
     cout << endl << setw(first) << "Quick Sort";
     cout << setw(second) << "time";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << setprecision(4) << grid[i].quick_sort.time;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "comparrisons";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].quick_sort.comparrisons;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "assignments";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].quick_sort.assignments;
     }
     cout << endl << setw(first) << ' ';
     cout << setw(second) << "operations";
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         cout << setw(third) << left << grid[i].quick_sort.operations;
     }
 
 }       
 void save_results(sort_data* grid, int loops) {
-    int maxarr = loops;
+    int maxarr = loops - 1;
     int amount = 1000;
     ofstream results;
     results.open("test.csv"/*, ios_base::app*/);
     cout << "..." << endl;
 
     results << "NUMBERS" << ','  << " " << ',';
-    for (int i = maxarr; i > 0; i--) {
-        results << 100 + amount - (100 * i) << ',';
+    for (int i = maxarr; i >= 0; i--) {
+        results << amount - (100 * i) << ',';
     }
 
 
 
     results << endl << "Insertion Sort" << ',';
     results << "time" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << setprecision(4) << grid[0].insertion_sort.time << ',';
     }
     results << endl << ' ' << ',';
     results << "comparrisons" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].insertion_sort.comparrisons << ',';
     }
     results << endl <<  ' ' << ',';
     results << "assignments" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].insertion_sort.assignments << ',';
     }
     results << endl << ' ' << ',';
     results << "operations" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].insertion_sort.operations << ',';
     }
 
     results << endl << "Selection Sort" << ',';
     results << "time" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << setprecision(4) << grid[0].selection_sort.time << ',';
     }
     results << endl << ' ' << ',';
     results << "comparrisons" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].selection_sort.comparrisons << ',';
     }
     results << endl << ' ' << ',';
     results << "assignments" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].selection_sort.assignments << ',';
     }
     results << endl << ' ' << ',';
     results << "operations" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].selection_sort.operations << ',';
     }
 
 
     results << endl << "Merge Sort" << ',';
     results << "time" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << setprecision(4) << grid[0].merge_sort.time << ',';
     }
     results << endl << ' ' << ',';
     results << "comparrisons" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].merge_sort.comparrisons << ',';
     }
     results << endl << ' ' << ',';
     results << "assignments" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].merge_sort.assignments << ',';
     }
     results << endl << ' ' << ',';
     results << "operations" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].merge_sort.operations << ',';
     }
 
     results << endl << "Quick Sort" << ',';
     results << "time" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << setprecision(4) << grid[i].quick_sort.time << ',';
     }
     results << endl << ' ' << ',';
     results << "comparrisons" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].quick_sort.comparrisons << ',';
     }
     results << endl << ' ' << ',';
     results << "assignments" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].quick_sort.assignments << ',';
     }
     results << endl << ' ' << ',';
     results << "operations" << ',';
-    for (int i = maxarr; i > 0; i--) {
+    for (int i = maxarr; i >= 0; i--) {
         results << grid[i].quick_sort.operations << ',';
     }
     cout << "done.";
